@@ -31,6 +31,8 @@ class ParentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->normalizeCredentials($request);
+
         $validated = $request->validate($this->rules());
         $validated['created_by_id'] = null;
 
@@ -49,6 +51,8 @@ class ParentController extends Controller
 
     public function update(Request $request, ParentModel $parent): JsonResponse
     {
+        $this->normalizeCredentials($request);
+
         $validated = $request->validate($this->rules($parent->id));
 
         $parent = $this->parentService->updateParent($parent, $validated);
@@ -80,10 +84,28 @@ class ParentController extends Controller
                 Rule::unique('tenant.parents', 'phone')->ignore($parentId),
             ],
             'email' => ['nullable', 'email', 'max:255'],
+            'username' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('tenant.parents', 'username')->ignore($parentId),
+            ],
+            'password' => ['nullable', 'string', 'min:6', 'max:255'],
             'address' => ['nullable', 'string'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:20'],
             'is_active' => ['required', 'boolean'],
         ];
+    }
+
+    private function normalizeCredentials(Request $request): void
+    {
+        $username = trim((string) $request->input('username'));
+        $password = (string) $request->input('password');
+
+        $request->merge([
+            'username' => $username === '' ? null : $username,
+            'password' => trim($password) === '' ? null : $password,
+        ]);
     }
 }

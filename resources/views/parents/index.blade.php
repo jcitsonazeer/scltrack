@@ -54,6 +54,7 @@
                         <th>Full Name</th>
                         <th>Phone</th>
                         <th>Email</th>
+                        <th>Username</th>
                         <th>Status</th>
                         <th>Created Date</th>
                         <th>Actions</th>
@@ -66,6 +67,7 @@
                             <td>{{ $parent->full_name }}</td>
                             <td>{{ $parent->phone ?: '-' }}</td>
                             <td>{{ $parent->email ?: '-' }}</td>
+                            <td>{{ $parent->username ?: '-' }}</td>
                             <td>
                                 @if ($parent->is_active)
                                     <span class="badge badge-success">ACTIVE</span>
@@ -92,7 +94,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-3" style="background-color: #fff;">No parents found.</td>
+                            <td colspan="8" class="text-center text-muted py-3" style="background-color: #fff;">No parents found.</td>
                         </tr>
                     @endforelse
                 </tbody>

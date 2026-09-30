@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Tenant\ParentModel;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class ParentService
@@ -59,6 +60,14 @@ class ParentService
 
         if (array_key_exists('created_by_id', $data)) {
             $prepared['created_by_id'] = $data['created_by_id'];
+        }
+
+        if (array_key_exists('username', $data)) {
+            $prepared['username'] = $data['username'] ?: null;
+        }
+
+        if (! empty($data['password'])) {
+            $prepared['password'] = Hash::make($data['password']);
         }
 
         return $prepared;

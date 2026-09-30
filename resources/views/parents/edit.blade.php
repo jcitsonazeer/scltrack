@@ -31,6 +31,22 @@
                 <input type="email" name="email" class="form-control" value="{{ old('email', $parent->email) }}">
             </div>
             <div class="col-md-6">
+                <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Username</label>
+                <input type="text" name="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username', $parent->username) }}" maxlength="255" autocomplete="username">
+                <div class="form-text" style="font-size: 0.78rem;">Clear this to remove the username.</div>
+                @error('username')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Password</label>
+                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password">
+                <div class="form-text" style="font-size: 0.78rem;">Leave blank to keep the current password. Minimum 6 characters.</div>
+                @error('password')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
                 <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Status <span class="text-danger">*</span></label>
                 <select name="is_active" class="form-select" required>
                     <option value="1" {{ old('is_active', $parent->is_active) == 1 ? 'selected' : '' }}>Active</option>
