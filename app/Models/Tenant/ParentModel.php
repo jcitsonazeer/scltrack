@@ -12,12 +12,18 @@ class ParentModel extends TenantModel
         'full_name',
         'phone',
         'email',
+        'username',
+        'password',
         'address',
         'emergency_contact_name',
         'emergency_contact_phone',
         'is_active',
         'created_by_id',
         'updated_by_id',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     protected function casts(): array
