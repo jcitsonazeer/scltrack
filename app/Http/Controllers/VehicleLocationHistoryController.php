@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tenant\ActiveTrip;
 use App\Models\Tenant\Vehicle;
 use App\Models\Tenant\VehicleLocationHistory;
+use App\Services\RolePermissionService;
 use App\Services\VehicleLocationHistoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,8 +13,10 @@ use Illuminate\View\View;
 
 class VehicleLocationHistoryController extends Controller
 {
-    public function __construct(private VehicleLocationHistoryService $locationHistoryService)
-    {
+    public function __construct(
+        private VehicleLocationHistoryService $locationHistoryService,
+        private RolePermissionService $rolePermissionService
+    ) {
     }
 
     public function index(Request $request): View
@@ -26,7 +29,11 @@ class VehicleLocationHistoryController extends Controller
         }
 
         return view('vehicle_location_history.index', [
-            'locationHistory' => $this->locationHistoryService->getPaginatedLocationHistory($search, $perPage),
+            'locationHistory' => $this->locationHistoryService->getPaginatedLocationHistory(
+                $search,
+                $perPage,
+                $this->rolePermissionService->driverScopeId()
+            ),
             'search' => $search,
             'perPage' => $perPage,
         ]);

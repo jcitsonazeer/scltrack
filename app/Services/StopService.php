@@ -10,18 +10,28 @@ use Illuminate\Validation\ValidationException;
 
 class StopService
 {
-    public function getPaginatedStops(?string $search = null, int $perPage = 10): LengthAwarePaginator
+    /**
+     * When $driverId is given the list is limited to the stops on that driver's routes.
+     */
+    public function getPaginatedStops(?string $search = null, int $perPage = 10, ?int $driverId = null): LengthAwarePaginator
     {
-        return Stop::query()
-            ->with('route')
+        $query = Stop::query()->with('route');
+
+        if ($driverId) {
+            $query = app(DriverScopeService::class)->scopeStops($query, $driverId);
+        }
+
+        return $query
             ->when($search, function ($query, $searchText) {
-                $query->where('stop_name', 'like', '%' . $searchText . '%')
-                    ->orWhere('stop_code', 'like', '%' . $searchText . '%')
-                    ->orWhereHas('route', function ($routeQuery) use ($searchText) {
-                        $routeQuery->where('route_name', 'like', '%' . $searchText . '%')
-                            ->orWhere('route_code', 'like', '%' . $searchText . '%')
-                            ->orWhere('trip_type', 'like', '%' . $searchText . '%');
-                    });
+                $query->where(function ($query) use ($searchText) {
+                    $query->where('stop_name', 'like', '%' . $searchText . '%')
+                        ->orWhere('stop_code', 'like', '%' . $searchText . '%')
+                        ->orWhereHas('route', function ($routeQuery) use ($searchText) {
+                            $routeQuery->where('route_name', 'like', '%' . $searchText . '%')
+                                ->orWhere('route_code', 'like', '%' . $searchText . '%')
+                                ->orWhere('trip_type', 'like', '%' . $searchText . '%');
+                        });
+                });
             })
             ->orderByDesc('id')
             ->paginate($perPage)

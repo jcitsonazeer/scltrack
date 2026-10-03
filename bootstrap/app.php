@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin.login' => \App\Http\Middleware\RequireAdminAndDriverLogin::class,
+            'module.permission' => \App\Http\Middleware\CheckModulePermission::class,
+            'driver.scope' => \App\Http\Middleware\ScopeDriverData::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

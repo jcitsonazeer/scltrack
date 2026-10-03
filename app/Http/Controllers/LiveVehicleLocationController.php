@@ -6,6 +6,7 @@ use App\Models\Tenant\ActiveTrip;
 use App\Models\Tenant\LiveVehicleLocation;
 use App\Models\Tenant\Vehicle;
 use App\Services\LiveVehicleLocationService;
+use App\Services\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -13,8 +14,10 @@ use Illuminate\View\View;
 
 class LiveVehicleLocationController extends Controller
 {
-    public function __construct(private LiveVehicleLocationService $liveLocationService)
-    {
+    public function __construct(
+        private LiveVehicleLocationService $liveLocationService,
+        private RolePermissionService $rolePermissionService
+    ) {
     }
 
     public function index(Request $request): View
@@ -27,7 +30,11 @@ class LiveVehicleLocationController extends Controller
         }
 
         return view('live_vehicle_locations.index', [
-            'liveLocations' => $this->liveLocationService->getPaginatedLiveLocations($search, $perPage),
+            'liveLocations' => $this->liveLocationService->getPaginatedLiveLocations(
+                $search,
+                $perPage,
+                $this->rolePermissionService->driverScopeId()
+            ),
             'search' => $search,
             'perPage' => $perPage,
         ]);

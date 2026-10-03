@@ -616,6 +616,58 @@ textarea.form-control {
     min-height: 42px;
 }
 
+.dashboard-stat-row {
+    margin-bottom: 0 !important;
+}
+
+.dashboard-stat-card {
+    background: linear-gradient(160deg, var(--lavender-soft), var(--blue-soft));
+    border: 1px solid var(--line-lavender);
+    border-radius: 12px;
+    color: var(--ink) !important;
+    display: block;
+    height: 100%;
+    padding: 14px 16px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dashboard-stat-card:hover {
+    box-shadow: 0 12px 26px rgba(47, 109, 246, 0.14);
+    color: var(--ink) !important;
+    transform: translateY(-2px);
+}
+
+.dashboard-stat-card-plain {
+    background: var(--panel-soft);
+    cursor: default;
+}
+
+.dashboard-stat-card-plain:hover {
+    box-shadow: none;
+    transform: none;
+}
+
+.dashboard-stat-label {
+    color: var(--indigo) !important;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.dashboard-stat-value {
+    color: var(--ink);
+    font-size: 1.75rem;
+    font-weight: 850;
+    line-height: 1.15;
+    margin: 6px 0 2px;
+}
+
+.dashboard-stat-meta {
+    color: var(--muted);
+    font-size: 0.76rem;
+}
+
 @media (min-width: 768px) {
     .module-card:has(> form) {
         margin-left: auto;

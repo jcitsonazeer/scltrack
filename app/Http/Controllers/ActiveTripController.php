@@ -7,6 +7,7 @@ use App\Models\Tenant\AdminAndDriver;
 use App\Models\Tenant\Vehicle;
 use App\Models\Tenant\VehicleRoute;
 use App\Services\ActiveTripService;
+use App\Services\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,8 +15,10 @@ use Illuminate\Validation\Rule;
 
 class ActiveTripController extends Controller
 {
-    public function __construct(private ActiveTripService $activeTripService)
-    {
+    public function __construct(
+        private ActiveTripService $activeTripService,
+        private RolePermissionService $rolePermissionService
+    ) {
     }
 
     public function index(Request $request): View
@@ -28,7 +31,11 @@ class ActiveTripController extends Controller
         }
 
         return view('active_trips.index', [
-            'activeTrips' => $this->activeTripService->getPaginatedActiveTrips($search, $perPage),
+            'activeTrips' => $this->activeTripService->getPaginatedActiveTrips(
+                $search,
+                $perPage,
+                $this->rolePermissionService->driverScopeId()
+            ),
             'search' => $search,
             'perPage' => $perPage,
         ]);

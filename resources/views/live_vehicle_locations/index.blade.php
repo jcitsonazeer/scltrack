@@ -19,7 +19,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Live Vehicle Locations</div>
-            <a href="{{ route('live-vehicle-locations.create') }}" class="btn btn-primary">Add Live Location</a>
+            @permission('live-vehicle-locations', 'create')
+                <a href="{{ route('live-vehicle-locations.create') }}" class="btn btn-primary">Add Live Location</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -75,12 +77,16 @@
                             <td>{{ $liveLocation->recorded_at ? $liveLocation->recorded_at->format('d-m-Y H:i') : '-' }}</td>
                             <td class="text-center" style="white-space: nowrap;">
                                 <a href="{{ route('live-vehicle-locations.show', $liveLocation) }}" class="grid-btn-edit"><i class="bi bi-eye"></i>View</a>
-                                <a href="{{ route('live-vehicle-locations.edit', $liveLocation) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
-                                <form action="{{ route('live-vehicle-locations.destroy', $liveLocation) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this live location?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
-                                </form>
+                                @permission('live-vehicle-locations', 'update')
+                                    <a href="{{ route('live-vehicle-locations.edit', $liveLocation) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
+                                @endpermission
+                                @permission('live-vehicle-locations', 'delete')
+                                    <form action="{{ route('live-vehicle-locations.destroy', $liveLocation) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this live location?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty

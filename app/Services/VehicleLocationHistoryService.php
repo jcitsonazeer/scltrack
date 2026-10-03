@@ -7,21 +7,32 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class VehicleLocationHistoryService
 {
-    public function getPaginatedLocationHistory(?string $search = null, int $perPage = 10): LengthAwarePaginator
+    /**
+     * When $driverId is given the list is limited to the history that driver may see.
+     */
+    public function getPaginatedLocationHistory(?string $search = null, int $perPage = 10, ?int $driverId = null): LengthAwarePaginator
     {
-        return VehicleLocationHistory::query()
-            ->with(['vehicle', 'activeTrip.route', 'activeTrip.vehicle', 'activeTrip.driver'])
+        $query = VehicleLocationHistory::query()
+            ->with(['vehicle', 'activeTrip.route', 'activeTrip.vehicle', 'activeTrip.driver']);
+
+        if ($driverId) {
+            $query = app(DriverScopeService::class)->scopeLocationHistory($query, $driverId);
+        }
+
+        return $query
             ->when($search, function ($query, $searchText) {
-                $query->where('latitude', 'like', '%' . $searchText . '%')
-                    ->orWhere('longitude', 'like', '%' . $searchText . '%')
-                    ->orWhereHas('vehicle', function ($vehicleQuery) use ($searchText) {
-                        $vehicleQuery->where('vehicle_number', 'like', '%' . $searchText . '%')
-                            ->orWhere('registration_number', 'like', '%' . $searchText . '%');
-                    })
-                    ->orWhereHas('activeTrip.route', function ($routeQuery) use ($searchText) {
-                        $routeQuery->where('route_name', 'like', '%' . $searchText . '%')
-                            ->orWhere('route_code', 'like', '%' . $searchText . '%');
-                    });
+                $query->where(function ($query) use ($searchText) {
+                    $query->where('latitude', 'like', '%' . $searchText . '%')
+                        ->orWhere('longitude', 'like', '%' . $searchText . '%')
+                        ->orWhereHas('vehicle', function ($vehicleQuery) use ($searchText) {
+                            $vehicleQuery->where('vehicle_number', 'like', '%' . $searchText . '%')
+                                ->orWhere('registration_number', 'like', '%' . $searchText . '%');
+                        })
+                        ->orWhereHas('activeTrip.route', function ($routeQuery) use ($searchText) {
+                            $routeQuery->where('route_name', 'like', '%' . $searchText . '%')
+                                ->orWhere('route_code', 'like', '%' . $searchText . '%');
+                        });
+                });
             })
             ->orderByDesc('recorded_at')
             ->orderByDesc('id')

@@ -61,12 +61,12 @@
                 <input type="number" name="stop_order" data-stop-order-input class="form-control" value="{{ old('stop_order', $stop->stop_order) }}" min="1" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Latitude</label>
-                <input type="number" step="0.0000001" name="latitude" class="form-control" value="{{ old('latitude', $stop->latitude) }}">
+                <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Latitude @if ($requireCoordinates)<span class="text-danger">*</span>@endif</label>
+                <input type="number" step="0.0000001" name="latitude" id="stop-latitude" class="form-control" value="{{ old('latitude', $stop->latitude) }}" @if ($requireCoordinates) required readonly @endif>
             </div>
             <div class="col-md-6">
-                <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Longitude</label>
-                <input type="number" step="0.0000001" name="longitude" class="form-control" value="{{ old('longitude', $stop->longitude) }}">
+                <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Longitude @if ($requireCoordinates)<span class="text-danger">*</span>@endif</label>
+                <input type="number" step="0.0000001" name="longitude" id="stop-longitude" class="form-control" value="{{ old('longitude', $stop->longitude) }}" @if ($requireCoordinates) required readonly @endif>
             </div>
             <div class="col-md-6">
                 <label class="form-label mb-1 text-muted" style="font-size: 0.82rem; font-weight: 500;">Status <span class="text-danger">*</span></label>
@@ -76,8 +76,12 @@
                 </select>
             </div>
         </div>
-        <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Update</button>
+        <div class="mt-4 d-flex gap-2 align-items-center flex-wrap">
+            <button type="button" class="btn btn-secondary" id="gps-button">
+                <i class="bi bi-crosshair"></i> Update From My Current Location
+            </button>
+            <span class="badge badge-danger" id="gps-status">LOCATION NOT READY</span>
+            <button type="submit" class="btn btn-primary" id="submit-stop-button">Update</button>
             <a href="{{ route('stops.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
@@ -207,6 +211,42 @@ document.querySelectorAll('[data-route-search]').forEach(function (wrapper) {
         searchInput.setCustomValidity('');
     });
 });
+
+(function () {
+    var gpsButton = document.getElementById('gps-button');
+    var gpsStatus = document.getElementById('gps-status');
+    var latitudeInput = document.getElementById('stop-latitude');
+    var longitudeInput = document.getElementById('stop-longitude');
+
+    function setStatus(text, isReady) {
+        gpsStatus.textContent = text;
+        gpsStatus.className = 'badge ' + (isReady ? 'badge-success' : 'badge-danger');
+    }
+
+    gpsButton.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+            setStatus('GPS NOT SUPPORTED', false);
+            return;
+        }
+
+        setStatus('LOCATING...', false);
+        gpsButton.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                latitudeInput.value = position.coords.latitude.toFixed(7);
+                longitudeInput.value = position.coords.longitude.toFixed(7);
+                setStatus('LOCATION CAPTURED', true);
+                gpsButton.disabled = false;
+            },
+            function () {
+                setStatus('LOCATION DENIED', false);
+                gpsButton.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    });
+})();
 </script>
 @endpush
 @endsection

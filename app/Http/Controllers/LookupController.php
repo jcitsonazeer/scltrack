@@ -6,11 +6,18 @@ use App\Models\Tenant\ClassSection;
 use App\Models\Tenant\Stop;
 use App\Models\Tenant\Student;
 use App\Models\Tenant\VehicleRoute;
+use App\Services\DriverScopeService;
+use App\Services\RolePermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LookupController extends Controller
 {
+    public function __construct(
+        private RolePermissionService $rolePermissionService,
+        private DriverScopeService $driverScopeService
+    ) {
+    }
     public function classSections(Request $request): JsonResponse
     {
         $search = $request->string('q')->toString();
@@ -66,16 +73,25 @@ class LookupController extends Controller
     {
         $search = $request->string('q')->toString();
 
+        $query = VehicleRoute::query()
+            ->withMax('stops', 'stop_order')
+            ->where('is_active', true)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('route_name', 'like', "%{$search}%")
+                        ->orWhere('route_code', 'like', "%{$search}%");
+                });
+            });
+
+        // A driver may only pick a route that is assigned to them.
+        $driverRouteIds = $this->driverRouteIds();
+
+        if ($driverRouteIds !== null) {
+            $query->whereIn('id', $driverRouteIds);
+        }
+
         return response()->json(
-            VehicleRoute::query()
-                ->withMax('stops', 'stop_order')
-                ->where('is_active', true)
-                ->when($search, function ($query) use ($search) {
-                    $query->where(function ($query) use ($search) {
-                        $query->where('route_name', 'like', "%{$search}%")
-                            ->orWhere('route_code', 'like', "%{$search}%");
-                    });
-                })
+            $query
                 ->orderBy('route_name')
                 ->limit(10)
                 ->get()
@@ -94,23 +110,32 @@ class LookupController extends Controller
         $routeId = $request->integer('route_id');
         $selectedId = $request->integer('selected_id');
 
-        return response()->json(
-            Stop::query()
-                ->with('route')
-                ->where(function ($query) use ($selectedId) {
-                    $query->where('is_active', true);
+        $query = Stop::query()
+            ->with('route')
+            ->where(function ($query) use ($selectedId) {
+                $query->where('is_active', true);
 
-                    if ($selectedId) {
-                        $query->orWhere('id', $selectedId);
-                    }
-                })
-                ->when($routeId, fn ($query) => $query->where('route_id', $routeId))
-                ->when($search, function ($query) use ($search) {
-                    $query->where(function ($query) use ($search) {
-                        $query->where('stop_name', 'like', "%{$search}%")
-                            ->orWhere('stop_code', 'like', "%{$search}%");
-                    });
-                })
+                if ($selectedId) {
+                    $query->orWhere('id', $selectedId);
+                }
+            })
+            ->when($routeId, fn ($query) => $query->where('route_id', $routeId))
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('stop_name', 'like', "%{$search}%")
+                        ->orWhere('stop_code', 'like', "%{$search}%");
+                });
+            });
+
+        // A driver may only pick a stop that sits on one of their own routes.
+        $driverRouteIds = $this->driverRouteIds();
+
+        if ($driverRouteIds !== null) {
+            $query->whereIn('route_id', $driverRouteIds);
+        }
+
+        return response()->json(
+            $query
                 ->orderBy('stop_order')
                 ->orderBy('stop_name')
                 ->limit(10)
@@ -121,5 +146,23 @@ class LookupController extends Controller
                 ])
                 ->values()
         );
+    }
+
+    /**
+     * Assigned route ids of the logged in driver, or null when the user is not
+     * a driver. An empty array means "no route assigned", which must return no
+     * routes at all rather than every route.
+     *
+     * @return array<int, int>|null
+     */
+    private function driverRouteIds(): ?array
+    {
+        $user = $this->rolePermissionService->currentUser();
+
+        if (! $this->rolePermissionService->isDriver($user)) {
+            return null;
+        }
+
+        return $this->driverScopeService->routeIds((int) $user->id);
     }
 }

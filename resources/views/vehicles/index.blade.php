@@ -19,7 +19,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Vehicles</div>
-            <a href="{{ route('vehicles.create') }}" class="btn btn-primary">Add Vehicle</a>
+            @permission('vehicles', 'create')
+                <a href="{{ route('vehicles.create') }}" class="btn btn-primary">Add Vehicle</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -71,12 +73,16 @@
                             </td>
                             <td class="text-center" style="white-space: nowrap;">
                                 <a href="{{ route('vehicles.show', $vehicle) }}" class="grid-btn-edit"><i class="bi bi-eye"></i>View</a>
-                                <a href="{{ route('vehicles.edit', $vehicle) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
-                                <form action="{{ route('vehicles.destroy', $vehicle) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this vehicle?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
-                                </form>
+                                @permission('vehicles', 'update')
+                                    <a href="{{ route('vehicles.edit', $vehicle) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
+                                @endpermission
+                                @permission('vehicles', 'delete')
+                                    <form action="{{ route('vehicles.destroy', $vehicle) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this vehicle?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty

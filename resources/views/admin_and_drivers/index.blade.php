@@ -19,7 +19,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Admin & Drivers</div>
-            <a href="{{ route('admin-and-drivers.create') }}" class="btn btn-primary">Add Admin / Driver</a>
+            @permission('admin-and-drivers', 'create')
+                <a href="{{ route('admin-and-drivers.create') }}" class="btn btn-primary">Add Admin / Driver</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -79,12 +81,16 @@
                             </td>
                             <td class="text-center" style="white-space: nowrap;">
                                 <a href="{{ route('admin-and-drivers.show', $adminAndDriver) }}" class="grid-btn-edit"><i class="bi bi-eye"></i>View</a>
-                                <a href="{{ route('admin-and-drivers.edit', $adminAndDriver) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
-                                <form action="{{ route('admin-and-drivers.destroy', $adminAndDriver) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this admin / driver?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
-                                </form>
+                                @permission('admin-and-drivers', 'update')
+                                    <a href="{{ route('admin-and-drivers.edit', $adminAndDriver) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
+                                @endpermission
+                                @permission('admin-and-drivers', 'delete')
+                                    <form action="{{ route('admin-and-drivers.destroy', $adminAndDriver) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this admin / driver?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty

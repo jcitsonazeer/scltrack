@@ -19,7 +19,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Class / Sections</div>
-            <a href="{{ route('class-sections.create') }}" class="btn btn-primary">Add Class / Section</a>
+            @permission('class-sections', 'create')
+                <a href="{{ route('class-sections.create') }}" class="btn btn-primary">Add Class / Section</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -71,12 +73,16 @@
                             </td>
                             <td class="text-center" style="white-space: nowrap;">
                                 <a href="{{ route('class-sections.show', $classSection) }}" class="grid-btn-edit"><i class="bi bi-eye"></i>View</a>
-                                <a href="{{ route('class-sections.edit', $classSection) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
-                                <form action="{{ route('class-sections.destroy', $classSection) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this class / section?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
-                                </form>
+                                @permission('class-sections', 'update')
+                                    <a href="{{ route('class-sections.edit', $classSection) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
+                                @endpermission
+                                @permission('class-sections', 'delete')
+                                    <form action="{{ route('class-sections.destroy', $classSection) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this class / section?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty

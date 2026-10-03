@@ -20,7 +20,9 @@
         @endif
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Parents</div>
-            <a href="{{ route('parents.create') }}" class="btn btn-primary">Add Parent</a>
+            @permission('parents', 'create')
+                <a href="{{ route('parents.create') }}" class="btn btn-primary">Add Parent</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -80,16 +82,20 @@
                                 <a href="{{ route('parents.show', $parent) }}" class="grid-btn-edit">
                                     <i class="bi bi-eye"></i>View
                                 </a>
-                                <a href="{{ route('parents.edit', $parent) }}" class="grid-btn-edit">
-                                    <i class="bi bi-pencil-square"></i>Edit
-                                </a>
-                                <form action="{{ route('parents.destroy', $parent) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this parent?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </button>
-                                </form>
+                                @permission('parents', 'update')
+                                    <a href="{{ route('parents.edit', $parent) }}" class="grid-btn-edit">
+                                        <i class="bi bi-pencil-square"></i>Edit
+                                    </a>
+                                @endpermission
+                                @permission('parents', 'delete')
+                                    <form action="{{ route('parents.destroy', $parent) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this parent?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty

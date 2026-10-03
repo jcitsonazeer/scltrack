@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\School;
+use App\Models\Tenant\AdminAndDriver;
 use App\Services\DriverAuthService;
+use App\Services\DriverStopService;
 use App\Services\SchoolService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +15,8 @@ class DriverPortalController extends Controller
 {
     public function __construct(
         private SchoolService $schoolService,
-        private DriverAuthService $driverAuthService
+        private DriverAuthService $driverAuthService,
+        private DriverStopService $driverStopService
     ) {
     }
 
@@ -70,11 +73,109 @@ class DriverPortalController extends Controller
         ]);
     }
 
+    public function stops(Request $request): View|RedirectResponse
+    {
+        $portal = $this->portalUser($request);
+
+        if ($portal instanceof RedirectResponse) {
+            return $portal;
+        }
+
+        [$school, $user] = $portal;
+
+        return view('admin_and_drivers.portal_stops', [
+            'school' => $school,
+            'user' => $this->driverAuthService->profile($school, $user),
+            'routes' => $this->driverStopService->assignedRoutes($user->id),
+            'stops' => $this->driverStopService->stopsForDriver($user->id),
+        ]);
+    }
+
+    public function storeStop(Request $request): RedirectResponse
+    {
+        $portal = $this->portalUser($request);
+
+        if ($portal instanceof RedirectResponse) {
+            return $portal;
+        }
+
+        [, $user] = $portal;
+
+        $validated = $request->validate([
+            'route_id' => ['required', 'integer'],
+            'stop_name' => ['required', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'stop_order' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $this->driverStopService->createStop($validated, $user->id);
+
+        return redirect()
+            ->route('app.driver.stops')
+            ->with('success', 'Stop added at your current location.');
+    }
+
+    public function updateStopLocation(Request $request, int $stopId): RedirectResponse
+    {
+        $portal = $this->portalUser($request);
+
+        if ($portal instanceof RedirectResponse) {
+            return $portal;
+        }
+
+        [, $user] = $portal;
+
+        $validated = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $stop = $this->driverStopService->findStop($stopId);
+
+        $this->driverStopService->updateStopLocation($stop, $validated, $user->id);
+
+        return redirect()
+            ->route('app.driver.stops')
+            ->with('success', 'Stop location updated.');
+    }
+
     public function logout(Request $request): RedirectResponse
     {
         $request->session()->forget('portal_admin_and_driver_id');
 
         return redirect()->route('app.select-school');
+    }
+
+    /**
+     * The logged in portal user, or a redirect when the session is missing.
+     *
+     * @return array{0: School, 1: AdminAndDriver}|RedirectResponse
+     */
+    private function portalUser(Request $request): array|RedirectResponse
+    {
+        $school = $this->school($request);
+
+        if (! $school) {
+            return redirect()->route('app.select-school');
+        }
+
+        $userId = $request->session()->get('portal_admin_and_driver_id');
+
+        if (! $userId) {
+            return redirect()->route('app.driver.login');
+        }
+
+        $this->driverAuthService->findOpenSchool($school);
+        $user = $this->driverAuthService->findById((int) $userId);
+
+        if ($user->user_role !== 'cab drivers') {
+            return redirect()
+                ->route('app.driver.dashboard')
+                ->with('error', 'Only cab drivers can update stop locations.');
+        }
+
+        return [$school, $user];
     }
 
     private function school(Request $request): ?School

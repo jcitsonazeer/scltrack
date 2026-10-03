@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminAndDriverController;
 use App\Http\Controllers\ActiveTripController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassSectionController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DriverPortalController;
 use App\Http\Controllers\LiveVehicleLocationController;
 use App\Http\Controllers\LookupController;
@@ -19,7 +20,7 @@ use App\Http\Controllers\VehicleLocationHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('parents.index');
+    return redirect()->route('dashboard.index');
 })->middleware('admin.login');
 
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
@@ -40,7 +41,21 @@ Route::post('driver/login', [DriverPortalController::class, 'login'])->name('app
 Route::get('driver/dashboard', [DriverPortalController::class, 'dashboard'])->name('app.driver.dashboard');
 Route::post('driver/logout', [DriverPortalController::class, 'logout'])->name('app.driver.logout');
 
-Route::middleware('admin.login')->group(function () {
+Route::get('driver/stops', [DriverPortalController::class, 'stops'])->name('app.driver.stops');
+Route::post('driver/stops', [DriverPortalController::class, 'storeStop'])->name('app.driver.stops.store');
+Route::post('driver/stops/{stopId}/location', [DriverPortalController::class, 'updateStopLocation'])->name('app.driver.stops.location');
+
+/*
+ * module.permission resolves the module and the action from each route name,
+ * so index / show are read access while store / update / destroy require the
+ * matching write permission.
+ *
+ * driver.scope is a no-op for every role except "cab drivers". For them it
+ * blocks records in the driver scoped modules that do not belong to them.
+ */
+Route::middleware(['admin.login', 'module.permission'])->group(function () {
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
     Route::get('lookups/class-sections', [LookupController::class, 'classSections'])->name('lookups.class-sections');
     Route::get('lookups/students', [LookupController::class, 'students'])->name('lookups.students');
     Route::get('lookups/routes', [LookupController::class, 'routes'])->name('lookups.routes');
@@ -63,4 +78,4 @@ Route::middleware('admin.login')->group(function () {
         ->parameters(['live-vehicle-locations' => 'liveVehicleLocation']);
     Route::resource('vehicle-location-history', VehicleLocationHistoryController::class)
         ->parameters(['vehicle-location-history' => 'vehicleLocationHistory']);
-});
+})->middleware('driver.scope');

@@ -19,7 +19,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Stops</div>
-            <a href="{{ route('stops.create') }}" class="btn btn-primary">Add Stop</a>
+            @permission('stops', 'create')
+                <a href="{{ route('stops.create') }}" class="btn btn-primary">Add Stop</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -79,12 +81,16 @@
                             </td>
                             <td class="text-center" style="white-space: nowrap;">
                                 <a href="{{ route('stops.show', $stop) }}" class="grid-btn-edit"><i class="bi bi-eye"></i>View</a>
-                                <a href="{{ route('stops.edit', $stop) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
-                                <form action="{{ route('stops.destroy', $stop) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this stop?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
-                                </form>
+                                @permission('stops', 'update')
+                                    <a href="{{ route('stops.edit', $stop) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
+                                @endpermission
+                                @permission('stops', 'delete')
+                                    <form action="{{ route('stops.destroy', $stop) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this stop?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty

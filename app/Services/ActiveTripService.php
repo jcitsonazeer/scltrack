@@ -8,25 +8,35 @@ use Illuminate\Validation\ValidationException;
 
 class ActiveTripService
 {
-    public function getPaginatedActiveTrips(?string $search = null, int $perPage = 10): LengthAwarePaginator
+    /**
+     * When $driverId is given the list is limited to the trips that driver may see.
+     */
+    public function getPaginatedActiveTrips(?string $search = null, int $perPage = 10, ?int $driverId = null): LengthAwarePaginator
     {
-        return ActiveTrip::query()
-            ->with(['route', 'vehicle', 'driver'])
+        $query = ActiveTrip::query()->with(['route', 'vehicle', 'driver']);
+
+        if ($driverId) {
+            $query = app(DriverScopeService::class)->scopeTrips($query, $driverId);
+        }
+
+        return $query
             ->when($search, function ($query, $searchText) {
-                $query->where('trip_status', 'like', '%' . $searchText . '%')
-                    ->orWhereHas('route', function ($routeQuery) use ($searchText) {
-                        $routeQuery->where('route_name', 'like', '%' . $searchText . '%')
-                            ->orWhere('route_code', 'like', '%' . $searchText . '%')
-                            ->orWhere('trip_type', 'like', '%' . $searchText . '%');
-                    })
-                    ->orWhereHas('vehicle', function ($vehicleQuery) use ($searchText) {
-                        $vehicleQuery->where('vehicle_number', 'like', '%' . $searchText . '%')
-                            ->orWhere('registration_number', 'like', '%' . $searchText . '%');
-                    })
-                    ->orWhereHas('driver', function ($driverQuery) use ($searchText) {
-                        $driverQuery->where('full_name', 'like', '%' . $searchText . '%')
-                            ->orWhere('phone', 'like', '%' . $searchText . '%');
-                    });
+                $query->where(function ($query) use ($searchText) {
+                    $query->where('trip_status', 'like', '%' . $searchText . '%')
+                        ->orWhereHas('route', function ($routeQuery) use ($searchText) {
+                            $routeQuery->where('route_name', 'like', '%' . $searchText . '%')
+                                ->orWhere('route_code', 'like', '%' . $searchText . '%')
+                                ->orWhere('trip_type', 'like', '%' . $searchText . '%');
+                        })
+                        ->orWhereHas('vehicle', function ($vehicleQuery) use ($searchText) {
+                            $vehicleQuery->where('vehicle_number', 'like', '%' . $searchText . '%')
+                                ->orWhere('registration_number', 'like', '%' . $searchText . '%');
+                        })
+                        ->orWhereHas('driver', function ($driverQuery) use ($searchText) {
+                            $driverQuery->where('full_name', 'like', '%' . $searchText . '%')
+                                ->orWhere('phone', 'like', '%' . $searchText . '%');
+                        });
+                });
             })
             ->orderByDesc('trip_date')
             ->orderByDesc('id')

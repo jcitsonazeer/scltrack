@@ -13,6 +13,9 @@
         <span class="navbar-brand-title">TRACKING</span>
         <div class="user-profile-block">
             <span>{{ $user['full_name'] }}</span>
+            @if ($user['user_role'] === 'cab drivers')
+                <a href="{{ route('app.driver.stops') }}" class="btn btn-sm btn-light">Update Stop Location</a>
+            @endif
             <form method="POST" action="{{ route('app.driver.logout') }}" class="m-0">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-light">Logout</button>

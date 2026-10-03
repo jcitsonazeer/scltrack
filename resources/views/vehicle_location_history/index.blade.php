@@ -19,7 +19,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="module-title-header mb-0">View Vehicle Location History</div>
-            <a href="{{ route('vehicle-location-history.create') }}" class="btn btn-primary">Add History</a>
+            @permission('vehicle-location-history', 'create')
+                <a href="{{ route('vehicle-location-history.create') }}" class="btn btn-primary">Add History</a>
+            @endpermission
         </div>
 
         <div class="row align-items-center justify-content-between g-2 mb-3">
@@ -75,12 +77,16 @@
                             <td>{{ $history->recorded_at ? $history->recorded_at->format('d-m-Y H:i') : '-' }}</td>
                             <td class="text-center" style="white-space: nowrap;">
                                 <a href="{{ route('vehicle-location-history.show', $history) }}" class="grid-btn-edit"><i class="bi bi-eye"></i>View</a>
-                                <a href="{{ route('vehicle-location-history.edit', $history) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
-                                <form action="{{ route('vehicle-location-history.destroy', $history) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this history record?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
-                                </form>
+                                @permission('vehicle-location-history', 'update')
+                                    <a href="{{ route('vehicle-location-history.edit', $history) }}" class="grid-btn-edit"><i class="bi bi-pencil-square"></i>Edit</a>
+                                @endpermission
+                                @permission('vehicle-location-history', 'delete')
+                                    <form action="{{ route('vehicle-location-history.destroy', $history) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this history record?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="grid-btn-delete"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                @endpermission
                             </td>
                         </tr>
                     @empty
